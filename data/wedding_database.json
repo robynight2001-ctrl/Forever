@@ -1,10 +1,10 @@
 {
   "admin": {
     "isConfigured": true,
-    "username": "wedding_admin",
-    "salt": "ff173e63a3d063046044676b957e19af",
-    "passwordHash": "d97e6b6c20197620993843fed0dc38d3703199d22ad448cfdb5869bf1a9aa3fcf4a2f4773366e0e1c55b8202b6eead48822dcf64100671a59f97f36c992543d4",
-    "updatedAt": "2026-10-15T04:57:15.030Z"
+    "username": "Ramadan",
+    "salt": "71491ae70685339da8f6c629829c6225",
+    "passwordHash": "bf65859c21444f51078709f7735de9208e69607a73d60d1a7a86259cb5bc6addcca30010e7406b683d1559aef1a04adb1bf055b5994e33fc16840c8057ef295d",
+    "updatedAt": "2026-10-15T16:45:04.514Z"
   },
   "published": {
     "siteTitle": "دعوة زفاف رمزي وريم | ليلة العمر",
@@ -38,47 +38,47 @@
     "photos": [
       {
         "url": "/src/assets/images/wedding_rings_detail_1791979814393.jpg",
-        "id": "photo-1",
-        "caption": "رباط المحبة والوفاء",
         "order": 1,
-        "category": "خواتم"
+        "category": "خواتم",
+        "caption": "رباط المحبة والوفاء",
+        "id": "photo-1"
       },
       {
-        "order": 2,
-        "url": "/src/assets/images/wedding_venue_palace_1791979814144.jpg",
         "id": "photo-2",
+        "order": 2,
         "caption": "القاعة الملكية لحفل الزفاف",
+        "url": "/src/assets/images/wedding_venue_palace_1791979814144.jpg",
         "category": "المكان"
       },
       {
-        "category": "الديكور",
         "order": 3,
+        "id": "photo-3",
         "url": "/src/assets/images/wedding_hero_bg_1791979813300.jpg",
-        "caption": "أجواء الشموع والضيافة الفاخرة",
-        "id": "photo-3"
+        "category": "الديكور",
+        "caption": "أجواء الشموع والضيافة الفاخرة"
       },
       {
         "caption": "العريس في يومه المميز",
-        "category": "العريس",
+        "id": "photo-4",
         "order": 4,
-        "url": "/src/assets/images/wedding_groom_portrait_1791979812553.jpg",
-        "id": "photo-4"
+        "category": "العريس",
+        "url": "/src/assets/images/wedding_groom_portrait_1791979812553.jpg"
       },
       {
-        "id": "photo-5",
+        "category": "العروس",
         "url": "/src/assets/images/wedding_bride_portrait_1791979814208.jpg",
+        "id": "photo-5",
         "caption": "إطلالة العروس الملكية",
-        "order": 5,
-        "category": "العروس"
+        "order": 5
       }
     ],
     "videos": [
       {
         "order": 1,
-        "type": "main",
+        "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
         "title": "لحظات استثنائية وبداية الحكاية",
         "description": "فيديو تشويقي يعبر عن مشاعر المحبة والبهجة والاستعداد لليلة العمر",
-        "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "type": "main",
         "id": "video-1"
       }
     ],
@@ -91,50 +91,50 @@
     "timelineEnabled": true,
     "timeline": [
       {
-        "id": "tl-1",
-        "time": "08:00 م",
         "order": 1,
-        "description": "الترحيب بالضيوف وتقديم القهوة العربية الأصيلة والحلويات الفاخرة",
-        "title": "استقبال الضيوف الكرام"
+        "id": "tl-1",
+        "title": "استقبال الضيوف الكرام",
+        "time": "08:00 م",
+        "description": "الترحيب بالضيوف وتقديم القهوة العربية الأصيلة والحلويات الفاخرة"
       },
       {
         "id": "tl-2",
+        "description": "دخول العروسين واستقبالهما بأجمل الأهازيج والتهاني",
         "time": "09:30 م",
         "title": "زفة العروسين المباركة",
-        "order": 2,
-        "description": "دخول العروسين واستقبالهما بأجمل الأهازيج والتهاني"
+        "order": 2
       },
       {
-        "id": "tl-3",
         "title": "مأدبة العشاء الملكية",
         "description": "تناول طعام العشاء مع أطيب التمنيات للعروسين بحياة سعيدة",
-        "time": "10:30 م",
-        "order": 3
+        "order": 3,
+        "id": "tl-3",
+        "time": "10:30 م"
       },
       {
+        "order": 4,
         "id": "tl-4",
         "time": "12:00 ص",
-        "description": "التقاط الصور التذكارية وتوديع الضيوف بالمسك والعود",
-        "order": 4,
-        "title": "تقطيع قالب الحلوى وتوديع الضيوف"
+        "title": "تقطيع قالب الحلوى وتوديع الضيوف",
+        "description": "التقاط الصور التذكارية وتوديع الضيوف بالمسك والعود"
       }
     ],
     "customSections": [
       {
-        "id": "custom-1",
         "order": 1,
-        "subtitle": "كلمة من أعماق القلب",
-        "title": "عبارات الشكر والامتنان",
         "isVisible": true,
-        "content": "نعجز عن شكر كل من شاركنا هذه الفرحة أو تكبد عناء الحضور، نسأل الله أن يبارك في أيامكم وأن يديم بيننا أواصر المحبة ودوام المسرات والأفراح."
+        "title": "عبارات الشكر والامتنان",
+        "id": "custom-1",
+        "content": "نعجز عن شكر كل من شاركنا هذه الفرحة أو تكبد عناء الحضور، نسأل الله أن يبارك في أيامكم وأن يديم بيننا أواصر المحبة ودوام المسرات والأفراح.",
+        "subtitle": "كلمة من أعماق القلب"
       },
       {
-        "title": "إرشادات خاصة بالضيوف الأعزاء",
-        "id": "custom-2",
-        "order": 2,
         "isVisible": true,
+        "subtitle": "نرجو التكرم بالاطلاع",
+        "id": "custom-2",
         "content": "نرجو من الحضور الكرام الالتزام بخصوصية الحفل وعدم التصوير بالهواتف داخل قاعة النساء، شاكرين لكم تفهمكم وحسن تعاونكم.",
-        "subtitle": "نرجو التكرم بالاطلاع"
+        "title": "إرشادات خاصة بالضيوف الأعزاء",
+        "order": 2
       }
     ],
     "rsvpEnabled": true,
@@ -322,6 +322,50 @@
   },
   "rsvps": [
     {
+      "guestName": "سارة المحمد",
+      "status": "attending",
+      "companionCount": 0,
+      "message": "أتشرف بالحضور ومشاركتكم فرحتكم الكبرى، ألف مبارك للعروسين!",
+      "phone": "",
+      "id": "rsvp-1792083117304-q3bzi",
+      "isVisibleInChat": true,
+      "isDeleted": false,
+      "createdAt": "2026-10-15T16:51:57.304Z"
+    },
+    {
+      "guestName": "عبدالله الدوسري",
+      "status": "attending",
+      "companionCount": 1,
+      "message": "بارك الله لكما وبارك عليكما وجمع بينكما في خير",
+      "phone": "0512345678",
+      "id": "rsvp-1792083113366-el8iq",
+      "isVisibleInChat": true,
+      "isDeleted": false,
+      "createdAt": "2026-10-15T16:51:53.366Z"
+    },
+    {
+      "guestName": "أحمد",
+      "status": "attending",
+      "companionCount": 0,
+      "message": "أتشرف بالحضور ومشاركتكم فرحتكم الكبرى، ألف مبارك للعروسين!",
+      "phone": "",
+      "id": "rsvp-1792082643545-4t759",
+      "isVisibleInChat": true,
+      "isDeleted": false,
+      "createdAt": "2026-10-15T16:44:03.545Z"
+    },
+    {
+      "guestName": "أحمد علي",
+      "status": "attending",
+      "companionCount": 2,
+      "message": "ألف مبروك وبالرفاه والبنين",
+      "phone": "0555555555",
+      "id": "rsvp-1792082619950-cccw5",
+      "isVisibleInChat": true,
+      "isDeleted": false,
+      "createdAt": "2026-10-15T16:43:39.950Z"
+    },
+    {
       "guestName": "محمد السالم",
       "status": "attending",
       "companionCount": 1,
@@ -377,6 +421,14 @@
     "4a9cd11733817fd7ad4095517463f92c5bdcf472a91d478a134f6422255c39e2": {
       "username": "owner@wedding.com",
       "expiresAt": 1792686384981
+    },
+    "3f99e84a49ca957e63713d28b62db68313b0d33af8cc1fd73b6885d4a119a795": {
+      "username": "robynight2001@gmail.com",
+      "expiresAt": 1792687070350
+    },
+    "cd44f025f884e3e5075db206bebc86c417163b827d3943900baab3a6d2cb089c": {
+      "username": "Ramadan",
+      "expiresAt": 1792687897759
     }
   }
 }

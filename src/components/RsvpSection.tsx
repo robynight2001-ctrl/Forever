@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
 import { CheckCircle2, HeartHandshake, Send, Users, AlertCircle } from 'lucide-react';
 import { safeFetchJson } from '../utils/api';
+import { db } from '../lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 interface RsvpSectionProps {
   enabled: boolean;
@@ -43,6 +45,15 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
     setLoading(true);
 
+    const finalWish = message.trim() || (status === 'attending'
+      ? 'أتشرف بالحضور ومشاركتكم فرحتكم الكبرى، ألف مبارك للعروسين!'
+      : 'أجمل التهاني والتبريكات للعروسين، ودامت دياركم عامرة بالأفراح.');
+
+    const cleanCompanions = status === 'attending' && allowCompanions ? companionCount : 0;
+    let savedSuccessfully = false;
+    let successText = '';
+
+    // Primary: Submit via server API
     try {
       const res = await safeFetchJson<{ message?: string; id?: string }>('/api/rsvp', {
         method: 'POST',
@@ -50,33 +61,67 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
         body: JSON.stringify({
           guestName: guestName.trim(),
           status,
-          companionCount: status === 'attending' && allowCompanions ? companionCount : 0,
+          companionCount: cleanCompanions,
           phone: phone.trim(),
-          message: message.trim()
+          message: finalWish
         })
       });
 
-      if (!res.ok || !res.data) {
-        throw new Error(res.error || 'حدث خطأ أثناء حفظ الرد');
+      if (res.ok && res.data) {
+        savedSuccessfully = true;
+        successText = res.data.message || (status === 'attending'
+          ? 'تم تأكيد حضوركم بنجاح في قاعدة البيانات، نتطلع بشوق لرؤيتكم ومشاركتنا فرحتنا!'
+          : 'تم استلام اعتذاركم ببالغ التقدير، نشكركم على مشاعركم الطيبة ودعواتكم الصادقة.');
       }
+    } catch (apiErr) {
+      console.warn('API RSVP submission attempt error, trying cloud fallback:', apiErr);
+    }
 
+    // Secondary fallback: Direct Cloud Firestore submission if API returned 404 or page error
+    if (!savedSuccessfully) {
+      try {
+        const fallbackId = `rsvp-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const fallbackEntry = {
+          id: fallbackId,
+          guestName: guestName.trim(),
+          status,
+          companionCount: cleanCompanions,
+          phone: phone.trim(),
+          message: finalWish,
+          isVisibleInChat: true,
+          isDeleted: false,
+          createdAt: new Date().toISOString()
+        };
+        await setDoc(doc(db, 'rsvps', fallbackId), fallbackEntry);
+        savedSuccessfully = true;
+        successText = status === 'attending'
+          ? 'تم تأكيد حضوركم بنجاح في قاعدة البيانات السحابية، نتطلع بشوق لرؤيتكم ومشاركتنا فرحتنا!'
+          : 'تم استلام اعتذاركم ببالغ التقدير، نشكركم على مشاعركم الطيبة ودعواتكم الصادقة.';
+      } catch (fbErr: any) {
+        console.error('Cloud Firestore submission fallback error:', fbErr);
+      }
+    }
+
+    if (savedSuccessfully) {
       setSubmitted(true);
-      setResponseMessage(res.data.message || 'تم تسجيل الرد بنجاح');
+      setResponseMessage(successText);
       onSuccess?.();
 
       if (status === 'attending') {
-        confetti({
-          particleCount: 70,
-          spread: 90,
-          origin: { y: 0.7 },
-          colors: ['#c89d5c', '#fbf7f0', '#d8ad6e']
-        });
+        try {
+          confetti({
+            particleCount: 70,
+            spread: 90,
+            origin: { y: 0.7 },
+            colors: ['#c89d5c', '#fbf7f0', '#d8ad6e']
+          });
+        } catch {}
       }
-    } catch (err: any) {
-      setErrorMessage(err.message || 'تعذر إرسال الرد، يرجى التحقق من اتصالك بالإنترنت');
-    } finally {
-      setLoading(false);
+    } else {
+      setErrorMessage('تعذر إرسال تأكيد الحضور، يرجى التحقق من اتصالك بالإنترنت والمحاولة مجدداً');
     }
+
+    setLoading(false);
   };
 
   const resetForm = () => {

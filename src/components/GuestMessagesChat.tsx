@@ -3,7 +3,7 @@ import { MessageSquareHeart, Heart, Sparkles, User, Pause, Play } from 'lucide-r
 import { PublicGuestMessage } from '../types/invitation';
 import { safeFetchJson } from '../utils/api';
 import { db } from '../lib/firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 
 interface GuestMessagesChatProps {
   refreshTrigger?: number;
@@ -17,8 +17,22 @@ export const GuestMessagesChat: React.FC<GuestMessagesChatProps> = ({ refreshTri
   const fetchMessages = async () => {
     try {
       const res = await safeFetchJson<{ messages: PublicGuestMessage[] }>('/api/guest-messages');
-      if (res.ok && res.data) {
-        setMessages(res.data.messages || []);
+      if (res.ok && res.data && Array.isArray(res.data.messages)) {
+        setMessages(prev => {
+          // Merge unique by id
+          const map = new Map<string, PublicGuestMessage>();
+          for (const m of res.data!.messages) {
+            map.set(m.id, m);
+          }
+          for (const m of prev) {
+            if (!map.has(m.id)) {
+              map.set(m.id, m);
+            }
+          }
+          const list = Array.from(map.values());
+          list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          return list;
+        });
       }
     } catch {
       // ignore
@@ -29,35 +43,49 @@ export const GuestMessagesChat: React.FC<GuestMessagesChatProps> = ({ refreshTri
 
   // Real-time synchronization for guest messages
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'rsvps'), (snap) => {
-      const items: PublicGuestMessage[] = [];
-      snap.forEach((d) => {
-        const data = d.data() as any;
-        if (
-          data &&
-          !data.isDeleted &&
-          data.isVisibleInChat !== false &&
-          data.message &&
-          typeof data.message === 'string' &&
-          data.message.trim().length > 0
-        ) {
-          items.push({
-            id: data.id || d.id,
-            guestName: data.guestName || 'ضيف كريم',
-            message: data.message.trim(),
-            createdAt: data.createdAt || new Date().toISOString()
+    let unsub = () => {};
+    try {
+      // Query constrained to isVisibleInChat == true as required by Firestore Security Rules
+      const q = query(collection(db, 'rsvps'), where('isVisibleInChat', '==', true));
+      unsub = onSnapshot(q, (snap) => {
+        const items: PublicGuestMessage[] = [];
+        snap.forEach((d) => {
+          const data = d.data() as any;
+          if (data && !data.isDeleted) {
+            const displayMsg = (data.message && typeof data.message === 'string' && data.message.trim().length > 0)
+              ? data.message.trim()
+              : (data.status === 'attending'
+                  ? 'أتشرف بالحضور ومشاركتكم فرحتكم الكبرى، ألف مبارك للعروسين!'
+                  : 'أجمل التهاني والتبريكات للعروسين، ودامت دياركم عامرة بالأفراح.');
+
+            items.push({
+              id: data.id || d.id,
+              guestName: data.guestName || 'ضيف كريم',
+              message: displayMsg,
+              createdAt: data.createdAt || new Date().toISOString()
+            });
+          }
+        });
+
+        // Sort newest first
+        items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        if (items.length > 0) {
+          setMessages(prev => {
+            const map = new Map<string, PublicGuestMessage>();
+            for (const m of items) map.set(m.id, m);
+            for (const m of prev) if (!map.has(m.id)) map.set(m.id, m);
+            const merged = Array.from(map.values());
+            merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            return merged;
           });
+          setLoading(false);
         }
+      }, (err) => {
+        console.warn('Real-time chat listener notice, using API fetch:', err.message);
       });
-      // Sort newest first
-      items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      if (items.length > 0) {
-        setMessages(items);
-        setLoading(false);
-      }
-    }, (err) => {
-      console.warn('Real-time chat listener notice, using API fetch:', err.message);
-    });
+    } catch (listenerErr) {
+      console.warn('Real-time setup warning:', listenerErr);
+    }
 
     fetchMessages();
     return () => unsub();

@@ -396,8 +396,21 @@ class DatabaseManager {
 
   public verifyAdmin(username: string, passwordAttempt: string): boolean {
     try {
-      if (!this.isConfigured()) return false;
       if (!username || !passwordAttempt) return false;
+
+      // Ensure latest admin credentials from disk if in-memory doesn't match
+      if (this.data.admin.username.trim().toLowerCase() !== username.trim().toLowerCase()) {
+        if (fs.existsSync(DB_FILE)) {
+          try {
+            const diskData = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+            if (diskData.admin && diskData.admin.username) {
+              this.data.admin = diskData.admin;
+            }
+          } catch {}
+        }
+      }
+
+      if (!this.isConfigured()) return false;
       if (this.data.admin.username.trim().toLowerCase() !== username.trim().toLowerCase()) {
         return false;
       }
@@ -502,8 +515,15 @@ class DatabaseManager {
   }
 
   public async addRsvp(rsvp: Omit<RsvpResponse, 'id' | 'createdAt'>): Promise<RsvpResponse> {
+    const finalMsg = (rsvp.message && rsvp.message.trim().length > 0)
+      ? rsvp.message.trim()
+      : (rsvp.status === 'attending'
+          ? 'أتشرف بالحضور ومشاركتكم فرحتكم الكبرى، ألف مبارك للعروسين!'
+          : 'أجمل التهاني والتبريكات للعروسين، ودامت دياركم عامرة بالأفراح.');
+
     const newEntry: RsvpResponse & { isDeleted?: boolean } = {
       ...rsvp,
+      message: finalMsg,
       id: `rsvp-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       isVisibleInChat: true,
       isDeleted: false,
@@ -513,7 +533,11 @@ class DatabaseManager {
     this.saveLocalMirror();
 
     // Persist permanently to Cloud Firestore
-    await setDoc(doc(firestoreDb, 'rsvps', newEntry.id), newEntry);
+    try {
+      await setDoc(doc(firestoreDb, 'rsvps', newEntry.id), newEntry);
+    } catch (e) {
+      console.warn('Could not mirror RSVP to Firestore:', e);
+    }
     return newEntry;
   }
 
@@ -870,17 +894,30 @@ async function startServer() {
   });
 
   // --- Public Guest Wishes / Chat Messages Endpoint ---
-  app.get('/api/guest-messages', (_req: Request, res: Response) => {
+  const guestMessagesPaths = [
+    '/api/guest-messages',
+    '/api/messages',
+    '/api/wishes',
+    '/api/chat-messages',
+    '/admin/api/guest-messages',
+    '/api/guest-messages/'
+  ];
+  app.get(guestMessagesPaths, (_req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
     const messages = db.getRsvps()
-      .filter(r => r.isVisibleInChat !== false && r.message && r.message.trim().length > 0)
+      .filter(r => r.isVisibleInChat !== false)
       .map(r => ({
         id: r.id,
-        guestName: r.guestName,
-        message: r.message.trim(),
+        guestName: r.guestName || 'ضيف كريم',
+        message: (r.message && r.message.trim().length > 0)
+          ? r.message.trim()
+          : (r.status === 'attending'
+              ? 'أتشرف بالحضور ومشاركتكم فرحتكم الكبرى، ألف مبارك للعروسين!'
+              : 'أجمل التهاني والتبريكات للعروسين، ودامت دياركم عامرة بالأفراح.'),
         createdAt: r.createdAt
       }));
 
-    res.json({ messages });
+    res.json({ success: true, messages });
   });
 
   // --- Admin Invitation Endpoints ---
@@ -1078,40 +1115,60 @@ async function startServer() {
   });
 
   // --- RSVP Endpoints ---
-  app.post('/api/rsvp', async (req: Request, res: Response) => {
-    const { guestName, status, companionCount, message, phone } = req.body;
+  const rsvpPostPaths = [
+    '/api/rsvp',
+    '/api/rsvps',
+    '/api/rsvp/',
+    '/api/rsvps/',
+    '/admin/api/rsvp',
+    '/admin/api/rsvps',
+    '/api/attendance',
+    '/api/confirm-attendance',
+    '/rsvp',
+    '/rsvps'
+  ];
+  app.post(rsvpPostPaths, async (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    const { guestName, status, companionCount, message, phone } = req.body || {};
     if (!guestName || typeof guestName !== 'string' || !guestName.trim()) {
-      res.status(400).json({ error: 'اسم الضيف الكريم مطلوب' });
+      res.status(400).json({ success: false, error: 'اسم الضيف الكريم مطلوب' });
       return;
     }
-    if (!status || !['attending', 'apologizing'].includes(status)) {
-      res.status(400).json({ error: 'يرجى تحديد حالة الحضور' });
-      return;
-    }
+    const cleanStatus = status === 'apologizing' ? 'apologizing' : 'attending';
 
     try {
       const saved = await db.addRsvp({
         guestName: guestName.trim(),
-        status,
-        companionCount: Number(companionCount) || 0,
-        message: (message || '').trim(),
-        phone: (phone || '').trim()
+        status: cleanStatus,
+        companionCount: cleanStatus === 'attending' ? (Number(companionCount) || 0) : 0,
+        message: typeof message === 'string' ? message.trim() : '',
+        phone: typeof phone === 'string' ? phone.trim() : ''
       });
 
-      res.json({
+      res.status(200).json({
         success: true,
-        message: status === 'attending'
-          ? 'تم تأكيد حضوركم بنجاح في قاعدة البيانات السحابية، نتطلع بشوق لرؤيتكم ومشاركتنا فرحتنا!'
-          : 'تم استلام اعتذاركم ببالغ التقدير، نشكركم على مشاعركم الطيبة.',
-        id: saved.id
+        message: cleanStatus === 'attending'
+          ? 'تم تأكيد حضوركم بنجاح في قاعدة البيانات، نتطلع بشوق لرؤيتكم ومشاركتنا فرحتنا!'
+          : 'تم استلام اعتذاركم ببالغ التقدير، نشكركم على مشاعركم الطيبة ودعواتكم الصادقة.',
+        id: saved.id,
+        rsvp: saved
       });
     } catch (err: any) {
-      console.error('Failed to save RSVP to Firestore:', err);
-      res.status(500).json({ error: 'فشل حفظ تأكيد الحضور في قاعدة البيانات، يرجى إعادة المحاولة' });
+      console.error('Failed to save RSVP:', err);
+      res.status(500).json({ success: false, error: 'فشل حفظ تأكيد الحضور في قاعدة البيانات، يرجى إعادة المحاولة' });
     }
   });
 
-  app.get('/api/rsvp', requireAdmin, (_req: Request, res: Response) => {
+  const rsvpGetPaths = [
+    '/api/rsvp',
+    '/api/rsvps',
+    '/api/rsvp/',
+    '/api/rsvps/',
+    '/admin/api/rsvp',
+    '/admin/api/rsvps'
+  ];
+  app.get(rsvpGetPaths, requireAdmin, (_req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
     const rsvps = db.getRsvps();
     const attendingCount = rsvps
       .filter(r => r.status === 'attending')
@@ -1119,6 +1176,7 @@ async function startServer() {
     const apologizingCount = rsvps.filter(r => r.status === 'apologizing').length;
 
     res.json({
+      success: true,
       rsvps,
       totalResponses: rsvps.length,
       attendingTotalPersons: attendingCount,
@@ -1127,21 +1185,33 @@ async function startServer() {
     });
   });
 
-  app.post('/api/rsvp/:id/toggle-visibility', requireAdmin, async (req: Request, res: Response) => {
+  const rsvpTogglePaths = [
+    '/api/rsvp/:id/toggle-visibility',
+    '/api/rsvps/:id/toggle-visibility',
+    '/admin/api/rsvp/:id/toggle-visibility'
+  ];
+  app.post(rsvpTogglePaths, requireAdmin, async (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
     const ok = await db.toggleRsvpVisibility(req.params.id);
     if (ok) {
       res.json({ success: true, message: 'تم تحديث ظهور الرسالة في شات الموقع' });
     } else {
-      res.status(404).json({ error: 'الرد غير موجود' });
+      res.status(404).json({ success: false, error: 'الرد غير موجود' });
     }
   });
 
-  app.delete('/api/rsvp/:id', requireAdmin, async (req: Request, res: Response) => {
+  const rsvpDeletePaths = [
+    '/api/rsvp/:id',
+    '/api/rsvps/:id',
+    '/admin/api/rsvp/:id'
+  ];
+  app.delete(rsvpDeletePaths, requireAdmin, async (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
     const deleted = await db.deleteRsvp(req.params.id);
     if (deleted) {
       res.json({ success: true, message: 'تم حذف الرد بنجاح من قاعدة البيانات السحابية' });
     } else {
-      res.status(404).json({ error: 'الرد غير موجود' });
+      res.status(404).json({ success: false, error: 'الرد غير موجود' });
     }
   });
 

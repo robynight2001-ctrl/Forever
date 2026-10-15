@@ -68,7 +68,14 @@ const formatText = (val: any, fallback = ''): string => {
   if (!val) return fallback;
   if (typeof val === 'string') return val;
   if (typeof val === 'object') {
-    return val.message || val.code || val.error || JSON.stringify(val);
+    if (typeof val.message === 'string') return val.message;
+    if (typeof val.error === 'string') return val.error;
+    if (typeof val.code === 'string') return `رمز: ${val.code}`;
+    try {
+      return JSON.stringify(val);
+    } catch {
+      return fallback;
+    }
   }
   return String(val);
 };
