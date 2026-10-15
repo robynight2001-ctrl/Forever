@@ -46,7 +46,10 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
       if (code === 'auth/unauthorized-domain') {
         return 'النطاق الحالي غير مصرح له في إعدادات Firebase Auth';
       }
-      return err.message || (code ? `خطأ (${code})` : JSON.stringify(err));
+      if (typeof err.message === 'string') return err.message;
+      if (typeof err.error === 'string') return err.error;
+      if (err.message && typeof err.message === 'object') return formatErrorMessage(err.message);
+      return code ? `خطأ (${code})` : (JSON.stringify(err) || 'حدث خطأ أثناء تسجيل الدخول');
     }
     return String(err);
   };

@@ -38,48 +38,48 @@
     "photos": [
       {
         "url": "/src/assets/images/wedding_rings_detail_1791979814393.jpg",
-        "category": "خواتم",
-        "order": 1,
         "id": "photo-1",
-        "caption": "رباط المحبة والوفاء"
+        "caption": "رباط المحبة والوفاء",
+        "order": 1,
+        "category": "خواتم"
       },
       {
-        "id": "photo-2",
+        "order": 2,
         "url": "/src/assets/images/wedding_venue_palace_1791979814144.jpg",
-        "category": "المكان",
+        "id": "photo-2",
         "caption": "القاعة الملكية لحفل الزفاف",
-        "order": 2
+        "category": "المكان"
       },
       {
-        "id": "photo-3",
         "category": "الديكور",
+        "order": 3,
         "url": "/src/assets/images/wedding_hero_bg_1791979813300.jpg",
         "caption": "أجواء الشموع والضيافة الفاخرة",
-        "order": 3
+        "id": "photo-3"
       },
       {
-        "order": 4,
-        "category": "العريس",
         "caption": "العريس في يومه المميز",
+        "category": "العريس",
+        "order": 4,
         "url": "/src/assets/images/wedding_groom_portrait_1791979812553.jpg",
         "id": "photo-4"
       },
       {
-        "url": "/src/assets/images/wedding_bride_portrait_1791979814208.jpg",
-        "order": 5,
-        "category": "العروس",
         "id": "photo-5",
-        "caption": "إطلالة العروس الملكية"
+        "url": "/src/assets/images/wedding_bride_portrait_1791979814208.jpg",
+        "caption": "إطلالة العروس الملكية",
+        "order": 5,
+        "category": "العروس"
       }
     ],
     "videos": [
       {
         "order": 1,
-        "id": "video-1",
-        "description": "فيديو تشويقي يعبر عن مشاعر المحبة والبهجة والاستعداد لليلة العمر",
-        "title": "لحظات استثنائية وبداية الحكاية",
         "type": "main",
-        "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+        "title": "لحظات استثنائية وبداية الحكاية",
+        "description": "فيديو تشويقي يعبر عن مشاعر المحبة والبهجة والاستعداد لليلة العمر",
+        "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "id": "video-1"
       }
     ],
     "musicUrl": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=romantic-wedding-piano-10657.mp3",
@@ -91,50 +91,50 @@
     "timelineEnabled": true,
     "timeline": [
       {
-        "title": "استقبال الضيوف الكرام",
-        "order": 1,
         "id": "tl-1",
         "time": "08:00 م",
-        "description": "الترحيب بالضيوف وتقديم القهوة العربية الأصيلة والحلويات الفاخرة"
+        "order": 1,
+        "description": "الترحيب بالضيوف وتقديم القهوة العربية الأصيلة والحلويات الفاخرة",
+        "title": "استقبال الضيوف الكرام"
       },
       {
-        "order": 2,
-        "title": "زفة العروسين المباركة",
         "id": "tl-2",
-        "description": "دخول العروسين واستقبالهما بأجمل الأهازيج والتهاني",
-        "time": "09:30 م"
+        "time": "09:30 م",
+        "title": "زفة العروسين المباركة",
+        "order": 2,
+        "description": "دخول العروسين واستقبالهما بأجمل الأهازيج والتهاني"
       },
       {
-        "time": "10:30 م",
-        "description": "تناول طعام العشاء مع أطيب التمنيات للعروسين بحياة سعيدة",
         "id": "tl-3",
         "title": "مأدبة العشاء الملكية",
+        "description": "تناول طعام العشاء مع أطيب التمنيات للعروسين بحياة سعيدة",
+        "time": "10:30 م",
         "order": 3
       },
       {
-        "description": "التقاط الصور التذكارية وتوديع الضيوف بالمسك والعود",
-        "time": "12:00 ص",
-        "title": "تقطيع قالب الحلوى وتوديع الضيوف",
         "id": "tl-4",
-        "order": 4
+        "time": "12:00 ص",
+        "description": "التقاط الصور التذكارية وتوديع الضيوف بالمسك والعود",
+        "order": 4,
+        "title": "تقطيع قالب الحلوى وتوديع الضيوف"
       }
     ],
     "customSections": [
       {
-        "content": "نعجز عن شكر كل من شاركنا هذه الفرحة أو تكبد عناء الحضور، نسأل الله أن يبارك في أيامكم وأن يديم بيننا أواصر المحبة ودوام المسرات والأفراح.",
-        "subtitle": "كلمة من أعماق القلب",
-        "isVisible": true,
+        "id": "custom-1",
         "order": 1,
+        "subtitle": "كلمة من أعماق القلب",
         "title": "عبارات الشكر والامتنان",
-        "id": "custom-1"
+        "isVisible": true,
+        "content": "نعجز عن شكر كل من شاركنا هذه الفرحة أو تكبد عناء الحضور، نسأل الله أن يبارك في أيامكم وأن يديم بيننا أواصر المحبة ودوام المسرات والأفراح."
       },
       {
-        "content": "نرجو من الحضور الكرام الالتزام بخصوصية الحفل وعدم التصوير بالهواتف داخل قاعة النساء، شاكرين لكم تفهمكم وحسن تعاونكم.",
-        "isVisible": true,
-        "id": "custom-2",
         "title": "إرشادات خاصة بالضيوف الأعزاء",
-        "subtitle": "نرجو التكرم بالاطلاع",
-        "order": 2
+        "id": "custom-2",
+        "order": 2,
+        "isVisible": true,
+        "content": "نرجو من الحضور الكرام الالتزام بخصوصية الحفل وعدم التصوير بالهواتف داخل قاعة النساء، شاكرين لكم تفهمكم وحسن تعاونكم.",
+        "subtitle": "نرجو التكرم بالاطلاع"
       }
     ],
     "rsvpEnabled": true,
@@ -373,6 +373,10 @@
     "3efd70ddfa58b58168c817ed1776088240a5ce4f39a3ff16ac812acae1a7feb2": {
       "username": "wedding_admin",
       "expiresAt": 1792646366717
+    },
+    "4a9cd11733817fd7ad4095517463f92c5bdcf472a91d478a134f6422255c39e2": {
+      "username": "owner@wedding.com",
+      "expiresAt": 1792686384981
     }
   }
 }

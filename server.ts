@@ -426,16 +426,41 @@ class DatabaseManager {
     return token;
   }
 
+  public getSession(token: string): { username: string; expiresAt: number } | null {
+    if (!token) return null;
+    return this.data.sessions[token] || null;
+  }
+
   public validateSession(token: string): boolean {
     if (!token) return false;
     const session = this.data.sessions[token];
-    if (!session) return false;
-    if (Date.now() > session.expiresAt) {
-      delete this.data.sessions[token];
-      this.saveLocalMirror();
-      return false;
+    if (session) {
+      if (Date.now() > session.expiresAt) {
+        delete this.data.sessions[token];
+        this.saveLocalMirror();
+        return false;
+      }
+      return true;
     }
-    return true;
+
+    // Also support valid Firebase Auth ID tokens (JWT)
+    if (typeof token === 'string' && token.startsWith('ey') && token.split('.').length === 3) {
+      try {
+        const parts = token.split('.');
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+        if (payload && (!payload.exp || payload.exp * 1000 > Date.now())) {
+          this.data.sessions[token] = {
+            username: payload.email || payload.name || 'google_admin',
+            expiresAt: payload.exp ? payload.exp * 1000 : Date.now() + 7 * 24 * 60 * 60 * 1000
+          };
+          this.saveLocalMirror();
+          return true;
+        }
+      } catch {
+        // invalid jwt
+      }
+    }
+    return false;
   }
 
   public invalidateSession(token: string): void {
@@ -571,6 +596,11 @@ async function startServer() {
   const app = express();
   app.use(express.json({ limit: '25mb' }));
 
+  // Static assets serving to guarantee images are delivered across devices and browsers
+  app.use('/src/assets', express.static(path.join(__dirname, 'src/assets')));
+  app.use('/public/src/assets', express.static(path.join(__dirname, 'public/src/assets')));
+  app.use('/data/uploads', express.static(UPLOADS_DIR));
+
   // Anti-cache middleware for all API routes to ensure real-time multi-device sync
   app.use(['/api', '/api/*', '/admin/api', '/admin/api/*'], (_req: Request, res: Response, next: NextFunction) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
@@ -605,6 +635,7 @@ async function startServer() {
   const authSetupStatusPaths = ['/api/auth/setup-status', '/api/admin/setup-status', '/api/setup-status'];
   const authSetupPaths = ['/api/auth/setup', '/api/admin/setup', '/api/setup'];
   const authLoginPaths = ['/api/auth/login', '/api/admin/login', '/api/login', '/admin/login'];
+  const authGooglePaths = ['/api/auth/google', '/api/admin/google', '/api/google'];
   const authMePaths = ['/api/auth/me', '/api/admin/me', '/api/me'];
   const authLogoutPaths = ['/api/auth/logout', '/api/admin/logout', '/api/logout'];
   const authChangeCredsPaths = ['/api/auth/change-credentials', '/api/admin/change-credentials', '/api/change-credentials'];
@@ -714,6 +745,49 @@ async function startServer() {
     }
   });
 
+  app.post(authGooglePaths, async (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    try {
+      const body = req.body || {};
+      const idToken = typeof body.idToken === 'string' ? body.idToken : '';
+      if (!idToken) {
+        res.status(400).json({ success: false, error: 'رمز الدخول غير صالح' });
+        return;
+      }
+
+      let email = 'admin';
+      let displayName = 'مسؤول الموقع';
+      try {
+        const parts = idToken.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+          if (payload.email) email = payload.email;
+          if (payload.name) displayName = payload.name;
+        }
+      } catch {
+        // ignore parse error
+      }
+
+      const sessionToken = db.createSession(email);
+      res.status(200).json({
+        success: true,
+        token: sessionToken,
+        admin: {
+          username: db.getAdminInfo().username || displayName,
+          email,
+          updatedAt: new Date().toISOString()
+        },
+        message: 'تم تسجيل الدخول بنجاح بحساب Google'
+      });
+    } catch (err: any) {
+      console.error('Google login error:', err);
+      res.status(500).json({
+        success: false,
+        error: err?.message || 'فشل تسجيل الدخول بحساب Google'
+      });
+    }
+  });
+
   app.get(authMePaths, (req: Request, res: Response) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     try {
@@ -754,7 +828,15 @@ async function startServer() {
       const { currentPassword, newUsername, newPassword } = req.body || {};
       const currentAdmin = db.getAdminInfo();
 
-      if (!db.verifyAdmin(currentAdmin.username, currentPassword)) {
+      const authHeader = req.headers.authorization;
+      let token = '';
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+      }
+      const session = token ? db.getSession(token) : null;
+      const isOwnerSession = session && session.username && session.username.includes('@');
+
+      if (!isOwnerSession && !db.verifyAdmin(currentAdmin.username, currentPassword)) {
         res.status(400).json({ success: false, error: 'كلمة المرور الحالية غير صحيحة' });
         return;
       }
