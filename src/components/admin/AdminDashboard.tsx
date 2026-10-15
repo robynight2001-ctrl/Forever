@@ -64,6 +64,15 @@ type TabType =
   | 'rsvp'
   | 'security';
 
+const formatText = (val: any, fallback = ''): string => {
+  if (!val) return fallback;
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    return val.message || val.code || val.error || JSON.stringify(val);
+  }
+  return String(val);
+};
+
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   token,
   onLogout,
@@ -134,7 +143,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           onUploaded(res.data.url);
           showNotice('success', 'تم رفع الملف وحفظه في السحابة بنجاح');
         } else {
-          showNotice('error', res.error || 'فشل رفع الملف إلى التخزين السحابي');
+          showNotice('error', formatText(res.error, 'فشل رفع الملف إلى التخزين السحابي'));
         }
         setUploadingField(null);
       };
@@ -144,7 +153,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       };
       reader.readAsDataURL(file);
     } catch (err: any) {
-      showNotice('error', err?.message || 'خطأ أثناء رفع الملف');
+      showNotice('error', formatText(err?.message || err, 'خطأ أثناء رفع الملف'));
       setUploadingField(null);
     }
   };
@@ -192,12 +201,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         setPublished(cleanPublished);
         setLoadError(null);
       } else {
-        const msg = res.error || 'تعذر جلب بيانات لوحة التحكم من الخادم';
+        const msg = formatText(res.error, 'تعذر جلب بيانات لوحة التحكم من الخادم');
         setLoadError(msg);
         showNotice('error', msg);
       }
     } catch (err: any) {
-      const msg = err?.message || 'تعذر جلب بيانات لوحة التحكم من الخادم';
+      const msg = formatText(err?.message || err, 'تعذر جلب بيانات لوحة التحكم من الخادم');
       setLoadError(msg);
       showNotice('error', msg);
     } finally {
@@ -236,8 +245,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     fetchRsvps();
   }, [token]);
 
-  const showNotice = (type: 'success' | 'error', message: string) => {
-    setNotification({ type, message });
+  const showNotice = (type: 'success' | 'error', message: any) => {
+    const text = formatText(message, type === 'success' ? 'تمت العملية بنجاح' : 'حدث خطأ في تنفيذ العملية');
+    setNotification({ type, message: text });
     setTimeout(() => setNotification(null), 5000);
   };
 
@@ -525,7 +535,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               تعذر استرجاع مسودة الدعوة
             </h3>
             <p className="text-xs text-[#b09e90] leading-relaxed">
-              {loadError || 'حدث خطأ أثناء تحميل بيانات لوحة التحكم من الخادم.'}
+              {formatText(loadError, 'حدث خطأ أثناء تحميل بيانات لوحة التحكم من الخادم.')}
             </p>
           </div>
           <div className="flex flex-col gap-3">
@@ -664,7 +674,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           ) : (
             <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
           )}
-          <span>{notification.message}</span>
+          <span>{formatText(notification.message)}</span>
         </div>
       )}
 

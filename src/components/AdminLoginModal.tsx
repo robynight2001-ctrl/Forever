@@ -24,7 +24,32 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string>('');
+
+  const formatErrorMessage = (err: any): string => {
+    if (!err) return '';
+    if (typeof err === 'string') return err;
+    if (typeof err === 'object') {
+      const code = err.code || '';
+      if (code === 'auth/popup-closed-by-user') {
+        return 'تم إغلاق نافذة تسجيل الدخول قبل إتمام المصادقة';
+      }
+      if (code === 'auth/popup-blocked') {
+        return 'تم حظر النافذة المنبثقة من قِبل المتصفح، يرجى السماح بالنوافذ المنبثقة ثم المحاولة مجدداً';
+      }
+      if (code === 'auth/cancelled-popup-request') {
+        return 'تم إلغاء طلب تسجيل الدخول السابق';
+      }
+      if (code === 'auth/network-request-failed') {
+        return 'تعذر الاتصال بخدمة المصادقة، يرجى التحقق من اتصال الإنترنت';
+      }
+      if (code === 'auth/unauthorized-domain') {
+        return 'النطاق الحالي غير مصرح له في إعدادات Firebase Auth';
+      }
+      return err.message || (code ? `خطأ (${code})` : JSON.stringify(err));
+    }
+    return String(err);
+  };
 
   const handleGoogleSignIn = async () => {
     setError('');
@@ -33,17 +58,28 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
       const res = await signInWithPopup(auth, googleProvider);
       if (res.user) {
         const idToken = await res.user.getIdToken();
-        localStorage.setItem('wedding_admin_token', idToken);
-        onLoginSuccess(idToken, {
+        
+        // Exchange or register session on server
+        const sessionRes = await safeFetchJson<{ success: boolean; token: string; admin: any }>('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken })
+        });
+
+        const activeToken = sessionRes.ok && sessionRes.data?.token ? sessionRes.data.token : idToken;
+        const adminData = sessionRes.ok && sessionRes.data?.admin ? sessionRes.data.admin : {
           username: res.user.displayName || res.user.email || 'Admin',
           email: res.user.email,
           updatedAt: new Date().toISOString()
-        });
+        };
+
+        localStorage.setItem('wedding_admin_token', activeToken);
+        onLoginSuccess(activeToken, adminData);
         onClose();
       }
     } catch (err: any) {
       console.error('Google sign in error:', err);
-      setError(err?.message || 'فشل تسجيل الدخول بواسطة Google');
+      setError(formatErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -111,7 +147,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
         });
 
         if (!res.ok || !res.data) {
-          setError(res.error || 'فشل إعداد حساب المسؤول، يرجى المحاولة مرة أخرى');
+          setError(formatErrorMessage(res.error) || 'فشل إعداد حساب المسؤول، يرجى المحاولة مرة أخرى');
           return;
         }
 
@@ -119,7 +155,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
         onLoginSuccess(res.data.token, res.data.admin);
         onClose();
       } catch (err: any) {
-        setError(err?.message || 'خطأ في الاتصال بالخادم');
+        setError(formatErrorMessage(err));
       } finally {
         setLoading(false);
       }
@@ -145,7 +181,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
           if (res.data?.needsSetup) {
             setIsSetupMode(true);
           }
-          setError(res.error || 'اسم المستخدم أو كلمة المرور غير صحيحة');
+          setError(formatErrorMessage(res.error) || 'اسم المستخدم أو كلمة المرور غير صحيحة');
           return;
         }
 
@@ -153,7 +189,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
         onLoginSuccess(res.data.token, res.data.admin);
         onClose();
       } catch (err: any) {
-        setError(err?.message || 'خطأ في الاتصال بالخادم');
+        setError(formatErrorMessage(err));
       } finally {
         setLoading(false);
       }
@@ -189,7 +225,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
         {error && (
           <div className="mb-6 p-3 rounded-xl bg-red-950/70 border border-red-800 text-red-200 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+            <span>{typeof error === 'string' ? error : formatErrorMessage(error)}</span>
           </div>
         )}
 

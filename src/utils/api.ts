@@ -84,15 +84,21 @@ export async function safeFetchJson<T = any>(
     try {
       const parsed = JSON.parse(trimmed);
       if (!res.ok) {
-        const errorMsg =
-          parsed?.error ||
-          parsed?.message ||
-          `فشل الطلب برمز الحالة ${res.status}`;
+        let errorMsg = `فشل الطلب برمز الحالة ${res.status}`;
+        if (typeof parsed?.error === 'string') {
+          errorMsg = parsed.error;
+        } else if (parsed?.error && typeof parsed.error === 'object') {
+          errorMsg = parsed.error.message || parsed.error.code || JSON.stringify(parsed.error);
+        } else if (typeof parsed?.message === 'string') {
+          errorMsg = parsed.message;
+        } else if (parsed?.message && typeof parsed.message === 'object') {
+          errorMsg = parsed.message.message || parsed.message.code || JSON.stringify(parsed.message);
+        }
         return {
           ok: false,
           status: res.status,
           data: parsed,
-          error: errorMsg
+          error: String(errorMsg)
         };
       }
       return {
