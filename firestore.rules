@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default-deny all by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isBootstrappedAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email == 'robynight2001@gmail.com' &&
+        request.auth.token.email_verified == true;
+    }
+
+    function isValidInvitation(data) {
+      return data.keys().hasAll(['siteTitle', 'groomName', 'brideName', 'weddingDate', 'venueName']) &&
+        data.siteTitle is string && data.siteTitle.size() >= 1 && data.siteTitle.size() <= 300 &&
+        data.groomName is string && data.groomName.size() >= 1 && data.groomName.size() <= 200 &&
+        data.brideName is string && data.brideName.size() >= 1 && data.brideName.size() <= 200 &&
+        data.weddingDate is string && data.weddingDate.size() <= 100 &&
+        data.venueName is string && data.venueName.size() <= 200 &&
+        (!('invitationMessage' in data) || (data.invitationMessage is string && data.invitationMessage.size() <= 5000)) &&
+        (!('venueAddress' in data) || (data.venueAddress is string && data.venueAddress.size() <= 1000)) &&
+        (!('photos' in data) || (data.photos is list && data.photos.size() <= 100)) &&
+        (!('videos' in data) || (data.videos is list && data.videos.size() <= 50)) &&
+        (!('timeline' in data) || (data.timeline is list && data.timeline.size() <= 50)) &&
+        (!('customSections' in data) || (data.customSections is list && data.customSections.size() <= 50));
+    }
+
+    function isValidRsvp(data) {
+      return data.keys().hasAll(['id', 'guestName', 'status', 'createdAt']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.guestName is string && data.guestName.size() >= 1 && data.guestName.size() <= 200 &&
+        data.status in ['attending', 'apologizing'] &&
+        (!('companionCount' in data) || (data.companionCount is number && data.companionCount >= 0 && data.companionCount <= 20)) &&
+        (!('message' in data) || (data.message is string && data.message.size() <= 2000)) &&
+        (!('phone' in data) || (data.phone is string && data.phone.size() <= 50)) &&
+        (!('isVisibleInChat' in data) || data.isVisibleInChat is bool) &&
+        (!('isDeleted' in data) || data.isDeleted is bool) &&
+        data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    // Wedding invitation configuration documents (published and draft)
+    match /settings/{settingId} {
+      // Anyone can read published settings; admin can read draft and admin configs
+      allow get: if isValidId(settingId) && (settingId == 'published' || isBootstrappedAdmin());
+      allow list: if isBootstrappedAdmin();
+
+      // Write allowed for bootstrapped admin OR valid invitation payloads on draft/published
+      allow create, update: if isValidId(settingId) && (
+        isBootstrappedAdmin() ||
+        ((settingId == 'published' || settingId == 'draft') && isValidInvitation(request.resource.data))
+      );
+      allow delete: if isValidId(settingId) && isBootstrappedAdmin();
+    }
+
+    // Guest RSVP entries and wishes
+    match /rsvps/{rsvpId} {
+      // Public visitors can read approved chat messages; admin can read all
+      allow get: if isValidId(rsvpId) && (resource.data.isVisibleInChat == true || isBootstrappedAdmin());
+      allow list: if isBootstrappedAdmin() || (resource.data.isVisibleInChat == true);
+
+      // Anyone can submit an RSVP with strict schema validation
+      allow create: if isValidId(rsvpId) && isValidRsvp(request.resource.data);
+
+      // Admin or visibility toggle or soft delete with validation
+      allow update: if isValidId(rsvpId) && (
+        isBootstrappedAdmin() ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isVisibleInChat', 'isDeleted']))
+      );
+
+      // Admin deletion
+      allow delete: if isValidId(rsvpId) && isBootstrappedAdmin();
+    }
+
+    // Admin active session tokens - strictly admin only
+    match /sessions/{sessionId} {
+      allow read, write: if isValidId(sessionId) && isBootstrappedAdmin();
+    }
+
+    // Media assets
+    match /media/{mediaId} {
+      allow get, list: if isValidId(mediaId);
+      allow create, update: if isValidId(mediaId) && (
+        isBootstrappedAdmin() ||
+        (request.resource.data.keys().hasAll(['id', 'url', 'createdAt']) &&
+         request.resource.data.id is string && request.resource.data.id.size() <= 128 &&
+         request.resource.data.url is string && request.resource.data.url.size() <= 2000000)
+      );
+      allow delete: if isValidId(mediaId) && isBootstrappedAdmin();
+    }
+  }
+}

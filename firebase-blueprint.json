@@ -1,0 +1,146 @@
+{
+  "entities": {
+    "AdminConfig": {
+      "title": "AdminConfig",
+      "description": "Secure admin authentication credentials and configuration",
+      "type": "object",
+      "properties": {
+        "isConfigured": {
+          "type": "boolean",
+          "description": "Whether an admin account has been initialized"
+        },
+        "username": {
+          "type": "string",
+          "description": "Admin username"
+        },
+        "salt": {
+          "type": "string",
+          "description": "Cryptographic salt for password verification"
+        },
+        "passwordHash": {
+          "type": "string",
+          "description": "Hashed password using scrypt"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of last credentials update"
+        }
+      },
+      "required": ["isConfigured", "username", "salt", "passwordHash"]
+    },
+    "InvitationData": {
+      "title": "InvitationData",
+      "description": "Complete wedding invitation settings, content, media links, and theme",
+      "type": "object",
+      "properties": {
+        "siteTitle": { "type": "string", "description": "Browser tab and header title" },
+        "groomName": { "type": "string", "description": "Groom's full name" },
+        "brideName": { "type": "string", "description": "Bride's full name" },
+        "groomBio": { "type": "string", "description": "Groom bio or family line" },
+        "brideBio": { "type": "string", "description": "Bride bio or family line" },
+        "groomImage": { "type": "string", "description": "Groom portrait URL" },
+        "brideImage": { "type": "string", "description": "Bride portrait URL" },
+        "openingHeadline": { "type": "string", "description": "Opening screen headline text" },
+        "openingSubheadline": { "type": "string", "description": "Opening screen subtitle or verse" },
+        "openingButtonText": { "type": "string", "description": "Button text to open invitation" },
+        "openingBgImage": { "type": "string", "description": "Opening screen background image URL" },
+        "openingBgVideo": { "type": "string", "description": "Optional opening background video URL" },
+        "weddingDate": { "type": "string", "description": "ISO wedding date string" },
+        "weddingDateHijri": { "type": "string", "description": "Hijri formatted wedding date" },
+        "eventStartTimeText": { "type": "string", "description": "Event start time display" },
+        "eventEndTimeText": { "type": "string", "description": "Event end time display" },
+        "invitationTitle": { "type": "string", "description": "Title on official invitation card" },
+        "invitationVerse": { "type": "string", "description": "Quranic verse or poem" },
+        "familyNamesText": { "type": "string", "description": "Hosts family names text" },
+        "invitationMessage": { "type": "string", "description": "Full formal invitation message" },
+        "invitationTextAlign": { "type": "string", "description": "Text alignment" },
+        "invitationBgStyle": { "type": "string", "description": "Invitation card background styling" },
+        "venueName": { "type": "string", "description": "Wedding venue palace or hall name" },
+        "venueCity": { "type": "string", "description": "City name" },
+        "venueAddress": { "type": "string", "description": "Detailed street address" },
+        "venueDescription": { "type": "string", "description": "Venue access details and notes" },
+        "venueMapUrl": { "type": "string", "description": "Google Maps link" },
+        "venueImage": { "type": "string", "description": "Venue photo URL" },
+        "musicUrl": { "type": "string", "description": "Background music audio stream or MP3 URL" },
+        "musicTitle": { "type": "string", "description": "Title of music track" },
+        "musicEnabled": { "type": "boolean", "description": "Whether audio autoplay is enabled" },
+        "musicAutoLoop": { "type": "boolean", "description": "Whether music loops continuously" },
+        "musicVolume": { "type": "number", "description": "Default playback volume from 0 to 1" },
+        "rsvpEnabled": { "type": "boolean", "description": "Whether RSVP confirmations are accepted" },
+        "rsvpDeadline": { "type": "string", "description": "RSVP deadline date string" },
+        "rsvpMaxCompanions": { "type": "number", "description": "Maximum companions allowed" },
+        "rsvpAllowCompanions": { "type": "boolean", "description": "Whether companions are allowed" },
+        "rsvpRequirePhone": { "type": "boolean", "description": "Whether phone number is mandatory" },
+        "rsvpNotes": { "type": "string", "description": "Additional notes for guests" },
+        "themePrimaryColor": { "type": "string", "description": "Primary accent color" },
+        "themeSecondaryColor": { "type": "string", "description": "Secondary accent color" },
+        "themeBgColor": { "type": "string", "description": "Main background dark color" },
+        "themeTextColor": { "type": "string", "description": "Main text light color" },
+        "themeFontHeading": { "type": "string", "description": "Heading font family name" },
+        "themeFontBody": { "type": "string", "description": "Body font family name" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" }
+      },
+      "required": ["siteTitle", "groomName", "brideName", "weddingDate", "venueName"]
+    },
+    "RsvpEntry": {
+      "title": "RsvpEntry",
+      "description": "Guest RSVP confirmation and congratulatory message",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the RSVP" },
+        "guestName": { "type": "string", "description": "Name of the invited guest" },
+        "status": { "type": "string", "enum": ["attending", "apologizing"], "description": "Attendance status" },
+        "companionCount": { "type": "number", "description": "Number of accompanying companions" },
+        "message": { "type": "string", "description": "Public congratulatory message to the couple" },
+        "phone": { "type": "string", "description": "Private phone number of the guest" },
+        "isVisibleInChat": { "type": "boolean", "description": "Whether the wish appears in the public guest chat ticker" },
+        "createdAt": { "type": "string", "description": "ISO creation timestamp" }
+      },
+      "required": ["id", "guestName", "status", "createdAt"]
+    },
+    "AdminSession": {
+      "title": "AdminSession",
+      "description": "Active administrator session token",
+      "type": "object",
+      "properties": {
+        "token": { "type": "string", "description": "Secure random session token" },
+        "username": { "type": "string", "description": "Authenticated admin username" },
+        "expiresAt": { "type": "number", "description": "Expiration epoch timestamp in ms" },
+        "createdAt": { "type": "string", "description": "ISO session creation timestamp" }
+      },
+      "required": ["token", "username", "expiresAt"]
+    },
+    "MediaUpload": {
+      "title": "MediaUpload",
+      "description": "Persistent media asset uploaded through admin dashboard",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique media identifier" },
+        "filename": { "type": "string", "description": "Original file name" },
+        "contentType": { "type": "string", "description": "MIME type (image/jpeg, audio/mpeg, etc.)" },
+        "size": { "type": "number", "description": "File size in bytes" },
+        "url": { "type": "string", "description": "Direct access URL" },
+        "createdAt": { "type": "string", "description": "Upload ISO timestamp" }
+      },
+      "required": ["id", "filename", "contentType", "url", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/settings/{settingId}": {
+      "schema": "#entities/InvitationData",
+      "description": "Wedding invitation published and draft data and admin settings"
+    },
+    "/rsvps/{rsvpId}": {
+      "schema": "#entities/RsvpEntry",
+      "description": "Guest RSVP attendance records and wishes"
+    },
+    "/sessions/{sessionId}": {
+      "schema": "#entities/AdminSession",
+      "description": "Active administrator session tokens"
+    },
+    "/media/{mediaId}": {
+      "schema": "#entities/MediaUpload",
+      "description": "Persistent media files metadata and direct URLs"
+    }
+  }
+}
