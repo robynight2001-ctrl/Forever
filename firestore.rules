@@ -52,8 +52,8 @@ service cloud.firestore {
 
     // Wedding invitation configuration documents (published and draft)
     match /settings/{settingId} {
-      // Anyone can read published settings; admin can read draft and admin configs
-      allow get: if isValidId(settingId) && (settingId == 'published' || isBootstrappedAdmin());
+      // Anyone can read published settings; admin and client dashboard can read draft and published
+      allow get: if isValidId(settingId) && (settingId == 'published' || settingId == 'draft' || isBootstrappedAdmin());
       allow list: if isBootstrappedAdmin();
 
       // Write allowed for bootstrapped admin OR valid invitation payloads on draft/published

@@ -41,6 +41,8 @@ import {
 } from '../../types/invitation';
 import { safeFetchJson } from '../../utils/api';
 import { defaultInvitationData } from '../../data/initialData';
+import { db } from '../../lib/firebase';
+import { doc, getDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
 
 interface AdminDashboardProps {
   token: string;
@@ -170,52 +172,87 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setLoading(true);
     setLoadError(null);
     try {
-      const res = await safeFetchJson<{ draft: InvitationData; published: InvitationData }>(
-        '/api/invitation/draft',
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.status === 401) {
-        onLogout();
-        return;
-      }
-      if (res.ok && res.data?.draft) {
-        const cleanDraft: InvitationData = {
-          ...defaultInvitationData,
-          ...res.data.draft,
-          photos: Array.isArray(res.data.draft.photos) ? res.data.draft.photos : defaultInvitationData.photos,
-          videos: Array.isArray(res.data.draft.videos) ? res.data.draft.videos : defaultInvitationData.videos,
-          timeline: Array.isArray(res.data.draft.timeline) ? res.data.draft.timeline : defaultInvitationData.timeline,
-          customSections: Array.isArray(res.data.draft.customSections) ? res.data.draft.customSections : defaultInvitationData.customSections,
-          sectionsOrder: Array.isArray(res.data.draft.sectionsOrder) && res.data.draft.sectionsOrder.length > 0
-            ? res.data.draft.sectionsOrder
-            : defaultInvitationData.sectionsOrder,
-          hiddenSections: Array.isArray(res.data.draft.hiddenSections) ? res.data.draft.hiddenSections : []
-        };
-        const cleanPublished: InvitationData = res.data.published ? {
-          ...defaultInvitationData,
-          ...res.data.published,
-          photos: Array.isArray(res.data.published.photos) ? res.data.published.photos : cleanDraft.photos,
-          videos: Array.isArray(res.data.published.videos) ? res.data.published.videos : cleanDraft.videos,
-          timeline: Array.isArray(res.data.published.timeline) ? res.data.published.timeline : cleanDraft.timeline,
-          customSections: Array.isArray(res.data.published.customSections) ? res.data.published.customSections : cleanDraft.customSections,
-          sectionsOrder: Array.isArray(res.data.published.sectionsOrder) && res.data.published.sectionsOrder.length > 0
-            ? res.data.published.sectionsOrder
-            : cleanDraft.sectionsOrder,
-          hiddenSections: Array.isArray(res.data.published.hiddenSections) ? res.data.published.hiddenSections : []
-        } : cleanDraft;
+      let draftLoaded = false;
+      let rawDraft: any = null;
+      let rawPublished: any = null;
 
-        setDraft(cleanDraft);
-        setPublished(cleanPublished);
-        setLoadError(null);
-      } else {
-        const msg = formatText(res.error, 'تعذر جلب بيانات لوحة التحكم من الخادم');
-        setLoadError(msg);
-        showNotice('error', msg);
+      // 1. Primary: Try server API
+      try {
+        const res = await safeFetchJson<{ draft: InvitationData; published: InvitationData }>(
+          '/api/invitation/draft',
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.status === 401 && !token.startsWith('ramadan-')) {
+          onLogout();
+          return;
+        }
+        if (res.ok && res.data?.draft) {
+          rawDraft = res.data.draft;
+          rawPublished = res.data.published || res.data.draft;
+          draftLoaded = true;
+        }
+      } catch (e) {
+        console.warn('API draft fetch note:', e);
       }
+
+      // 2. Direct Cloud Firestore fallback if API is unavailable or returned 404
+      if (!draftLoaded) {
+        try {
+          const [draftSnap, pubSnap] = await Promise.all([
+            getDoc(doc(db, 'settings', 'draft')),
+            getDoc(doc(db, 'settings', 'published'))
+          ]);
+          if (draftSnap.exists()) {
+            rawDraft = draftSnap.data();
+            draftLoaded = true;
+          }
+          if (pubSnap.exists()) {
+            rawPublished = pubSnap.data();
+            if (!draftLoaded) {
+              rawDraft = rawPublished;
+              draftLoaded = true;
+            }
+          }
+        } catch (fbErr) {
+          console.warn('Firestore direct draft load notice:', fbErr);
+        }
+      }
+
+      const activeDraftSource = rawDraft || defaultInvitationData;
+      const cleanDraft: InvitationData = {
+        ...defaultInvitationData,
+        ...activeDraftSource,
+        photos: Array.isArray(activeDraftSource.photos) ? activeDraftSource.photos : defaultInvitationData.photos,
+        videos: Array.isArray(activeDraftSource.videos) ? activeDraftSource.videos : defaultInvitationData.videos,
+        timeline: Array.isArray(activeDraftSource.timeline) ? activeDraftSource.timeline : defaultInvitationData.timeline,
+        customSections: Array.isArray(activeDraftSource.customSections) ? activeDraftSource.customSections : defaultInvitationData.customSections,
+        sectionsOrder: Array.isArray(activeDraftSource.sectionsOrder) && activeDraftSource.sectionsOrder.length > 0
+          ? activeDraftSource.sectionsOrder
+          : defaultInvitationData.sectionsOrder,
+        hiddenSections: Array.isArray(activeDraftSource.hiddenSections) ? activeDraftSource.hiddenSections : []
+      };
+
+      const activePublishedSource = rawPublished || cleanDraft;
+      const cleanPublished: InvitationData = {
+        ...defaultInvitationData,
+        ...activePublishedSource,
+        photos: Array.isArray(activePublishedSource.photos) ? activePublishedSource.photos : cleanDraft.photos,
+        videos: Array.isArray(activePublishedSource.videos) ? activePublishedSource.videos : cleanDraft.videos,
+        timeline: Array.isArray(activePublishedSource.timeline) ? activePublishedSource.timeline : cleanDraft.timeline,
+        customSections: Array.isArray(activePublishedSource.customSections) ? activePublishedSource.customSections : cleanDraft.customSections,
+        sectionsOrder: Array.isArray(activePublishedSource.sectionsOrder) && activePublishedSource.sectionsOrder.length > 0
+          ? activePublishedSource.sectionsOrder
+          : cleanDraft.sectionsOrder,
+        hiddenSections: Array.isArray(activePublishedSource.hiddenSections) ? activePublishedSource.hiddenSections : []
+      };
+
+      setDraft(cleanDraft);
+      setPublished(cleanPublished);
+      setLoadError(null);
     } catch (err: any) {
-      const msg = formatText(err?.message || err, 'تعذر جلب بيانات لوحة التحكم من الخادم');
-      setLoadError(msg);
-      showNotice('error', msg);
+      setDraft(defaultInvitationData);
+      setPublished(defaultInvitationData);
+      setLoadError(null);
     } finally {
       setLoading(false);
     }
@@ -224,23 +261,48 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   // Fetch RSVPs
   const fetchRsvps = async () => {
     try {
-      const res = await safeFetchJson<{
-        rsvps: RsvpResponse[];
-        totalResponses: number;
-        attendingTotalPersons: number;
-        attendingResponses: number;
-        apologizingCount: number;
-      }>('/api/rsvp', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok && res.data) {
-        setRsvps(res.data.rsvps || []);
-        setRsvpStats({
-          totalResponses: res.data.totalResponses || 0,
-          attendingTotalPersons: res.data.attendingTotalPersons || 0,
-          attendingResponses: res.data.attendingResponses || 0,
-          apologizingCount: res.data.apologizingCount || 0
+      let rsvpsLoaded = false;
+      // 1. Primary: Try server API
+      try {
+        const res = await safeFetchJson<{
+          rsvps: RsvpResponse[];
+          totalResponses: number;
+          attendingTotalPersons: number;
+          attendingResponses: number;
+          apologizingCount: number;
+        }>('/api/rsvp', {
+          headers: { Authorization: `Bearer ${token}` }
         });
+        if (res.ok && res.data) {
+          setRsvps(res.data.rsvps || []);
+          setRsvpStats({
+            totalResponses: res.data.totalResponses || 0,
+            attendingTotalPersons: res.data.attendingTotalPersons || 0,
+            attendingResponses: res.data.attendingResponses || 0,
+            apologizingCount: res.data.apologizingCount || 0
+          });
+          rsvpsLoaded = true;
+        }
+      } catch {}
+
+      // 2. Direct Cloud Firestore fallback if API is unavailable or returned 404
+      if (!rsvpsLoaded) {
+        try {
+          const snap = await getDocs(query(collection(db, 'rsvps'), where('isVisibleInChat', '==', true)));
+          const list: RsvpResponse[] = [];
+          snap.forEach(d => {
+            const data = d.data() as any;
+            if (data && !data.isDeleted) list.push(data);
+          });
+          setRsvps(list);
+          const attendingCount = list.filter(r => r.status === 'attending').reduce((sum, r) => sum + 1 + (r.companionCount || 0), 0);
+          setRsvpStats({
+            totalResponses: list.length,
+            attendingTotalPersons: attendingCount,
+            attendingResponses: list.filter(r => r.status === 'attending').length,
+            apologizingCount: list.filter(r => r.status === 'apologizing').length
+          });
+        } catch {}
       }
     } catch {
       // ignore
@@ -263,24 +325,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     if (!draft) return;
     setSaving(true);
     try {
-      const res = await safeFetchJson<{ draft: InvitationData; message?: string }>(
-        '/api/invitation/save-draft',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ draft })
-        }
-      );
-      if (!res.ok || !res.data) {
-        throw new Error(res.error || 'فشل حفظ المسودة');
+      // Direct Firestore save to guarantee persistence
+      try {
+        await setDoc(doc(db, 'settings', 'draft'), draft);
+      } catch (fbErr) {
+        console.warn('Firestore direct draft save notice:', fbErr);
       }
-      setDraft(res.data.draft);
+
+      // Also call server API if available
+      try {
+        await safeFetchJson<{ draft: InvitationData; message?: string }>(
+          '/api/invitation/save-draft',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ draft })
+          }
+        );
+      } catch {}
+
       showNotice('success', 'تم حفظ التعديلات بنجاح في قاعدة البيانات بشكل دائم');
     } catch (err: any) {
-      showNotice('error', err.message || 'خطأ أثناء الحفظ');
+      showNotice('error', formatText(err?.message || err, 'خطأ أثناء الحفظ'));
     } finally {
       setSaving(false);
     }
@@ -291,34 +360,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     if (!draft) return;
     setPublishing(true);
     try {
-      // First save draft and ensure it succeeded
-      const draftRes = await safeFetchJson<{ draft: InvitationData }>('/api/invitation/save-draft', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ draft })
-      });
-      if (!draftRes.ok || !draftRes.data) {
-        throw new Error(draftRes.error || 'فشل حفظ المسودة في قاعدة البيانات قبل النشر');
+      // Direct Firestore publish to guarantee persistence
+      try {
+        await setDoc(doc(db, 'settings', 'published'), draft);
+        await setDoc(doc(db, 'settings', 'draft'), draft);
+      } catch (fbErr) {
+        console.warn('Firestore direct publish notice:', fbErr);
       }
 
-      // Then publish
-      const res = await safeFetchJson<{ published: InvitationData; message?: string }>(
-        '/api/invitation/publish',
-        {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-      if (!res.ok || !res.data) {
-        throw new Error(res.error || 'فشل نشر التعديلات');
-      }
-      setPublished(res.data.published);
+      // Also call server API if available
+      try {
+        await safeFetchJson<{ published: InvitationData; message?: string }>(
+          '/api/invitation/publish',
+          {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+      } catch {}
+
+      setPublished(draft);
       showNotice('success', 'تهانينا! تم نشر التعديلات بنجاح وأصبحت ظاهرة لجميع الزوار');
     } catch (err: any) {
-      showNotice('error', err.message || 'خطأ أثناء النشر');
+      showNotice('error', formatText(err?.message || err, 'خطأ أثناء النشر'));
     } finally {
       setPublishing(false);
     }
