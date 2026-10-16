@@ -42,7 +42,7 @@ import {
 import { safeFetchJson } from '../../utils/api';
 import { defaultInvitationData } from '../../data/initialData';
 import { db } from '../../lib/firebase';
-import { doc, getDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, where } from 'firebase/firestore';
 
 interface AdminDashboardProps {
   token: string;
@@ -474,37 +474,91 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   // RSVP actions
   const handleDeleteRsvp = async (id: string) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذا الرد؟')) return;
+    let confirmed = true;
     try {
-      const res = await safeFetchJson(`/api/rsvp/${id}`, {
+      if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+        confirmed = window.confirm('هل أنت متأكد من حذف هذا الرد نهائياً من قاعدة البيانات؟');
+      }
+    } catch {
+      confirmed = true;
+    }
+    if (!confirmed) return;
+
+    // Snapshot current state for rollback if both deletion layers fail
+    const previousRsvps = [...rsvps];
+    const previousStats = { ...rsvpStats };
+
+    // 1. Immediate optimistic UI update (Requirement 5)
+    const updatedList = rsvps.filter(r => r.id !== id);
+    setRsvps(updatedList);
+    const updatedAttendingPersons = updatedList
+      .filter(r => r.status === 'attending')
+      .reduce((sum, r) => sum + 1 + (r.companionCount || 0), 0);
+    setRsvpStats({
+      totalResponses: updatedList.length,
+      attendingTotalPersons: updatedAttendingPersons,
+      attendingResponses: updatedList.filter(r => r.status === 'attending').length,
+      apologizingCount: updatedList.filter(r => r.status === 'apologizing').length
+    });
+
+    let deleteSuccess = false;
+    let successMessage = 'تم حذف الرد نهائياً من قاعدة البيانات بنجاح';
+
+    // 2. Primary: Server API deletion
+    try {
+      const res = await safeFetchJson<{ success?: boolean; message?: string }>(`/api/rsvp/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
-        showNotice('success', 'تم حذف الرد بنجاح');
-        fetchRsvps();
-      } else {
-        showNotice('error', res.error || 'تعذر حذف الرد');
+        deleteSuccess = true;
+        if (res.data?.message) successMessage = res.data.message;
       }
-    } catch {
-      showNotice('error', 'تعذر حذف الرد');
+    } catch (apiErr) {
+      console.warn('API deletion attempt notice:', apiErr);
+    }
+
+    // 3. Authoritative Direct Cloud Firestore deletion (Requirement 4)
+    // Ensures permanent deletion from Firestore even if serverless API route is cold or offline
+    try {
+      await deleteDoc(doc(db, 'rsvps', id));
+      deleteSuccess = true;
+    } catch (fbErr: any) {
+      console.warn('Direct Firestore deletion notice:', fbErr?.message || fbErr);
+    }
+
+    if (deleteSuccess) {
+      showNotice('success', successMessage);
+      fetchRsvps();
+    } else {
+      // Revert state if failed
+      setRsvps(previousRsvps);
+      setRsvpStats(previousStats);
+      showNotice('error', 'تعذر حذف الرد من قاعدة البيانات، يرجى التحقق من الاتصال والمحاولة مجدداً');
     }
   };
 
   const handleToggleChatVisibility = async (id: string) => {
+    const item = rsvps.find(r => r.id === id);
+    if (!item) return;
+    const nextVal = item.isVisibleInChat === false ? true : false;
+
+    // Immediate optimistic update
+    setRsvps(prev => prev.map(r => r.id === id ? { ...r, isVisibleInChat: nextVal } : r));
+
     try {
-      const res = await safeFetchJson(`/api/rsvp/${id}/toggle-visibility`, {
+      // Attempt server API update
+      safeFetchJson(`/api/rsvp/${id}/toggle-visibility`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        showNotice('success', 'تم تحديث حالة ظهور الرسالة في شات الموقع');
-        fetchRsvps();
-      } else {
-        showNotice('error', res.error || 'تعذر تحديث ظهور الرسالة');
-      }
+      }).catch(() => {});
+
+      // Authoritative direct Cloud Firestore update
+      await setDoc(doc(db, 'rsvps', id), { isVisibleInChat: nextVal }, { merge: true });
+      showNotice('success', nextVal ? 'الرسالة ظاهرة الآن في شات الموقع' : 'تم إخفاء الرسالة من شات الموقع');
     } catch {
       showNotice('error', 'تعذر تحديث ظهور الرسالة');
+      fetchRsvps();
     }
   };
 

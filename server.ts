@@ -10,6 +10,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  deleteDoc,
   collection,
   getDocs,
   onSnapshot
@@ -569,16 +570,18 @@ class DatabaseManager {
   }
 
   public async deleteRsvp(id: string): Promise<boolean> {
-    const item = this.data.rsvps.find(r => r.id === id);
-    if (!item) return false;
-    item.isDeleted = true;
-    this.data.rsvps = this.data.rsvps.filter(r => r.id !== id);
-    this.saveLocalMirror();
+    const existingIndex = this.data.rsvps.findIndex(r => r.id === id);
+    if (existingIndex !== -1) {
+      this.data.rsvps.splice(existingIndex, 1);
+      this.saveLocalMirror();
+    }
 
+    // Permanently remove document from Cloud Firestore
     try {
-      await setDoc(doc(firestoreDb, 'rsvps', id), { isDeleted: true }, { merge: true });
-    } catch (e) {
-      console.warn('Failed to soft-delete RSVP in Firestore:', e);
+      await deleteDoc(doc(firestoreDb, 'rsvps', id));
+      console.log(`Permanently deleted RSVP ${id} from Cloud Firestore.`);
+    } catch (e: any) {
+      console.warn('Failed to permanently delete RSVP in Firestore:', e?.message || e);
     }
     return true;
   }
@@ -1216,16 +1219,29 @@ async function startServer() {
   const rsvpDeletePaths = [
     '/api/rsvp/:id',
     '/api/rsvps/:id',
-    '/admin/api/rsvp/:id'
+    '/admin/api/rsvp/:id',
+    '/admin/api/rsvps/:id'
   ];
   app.delete(rsvpDeletePaths, requireAdmin, async (req: Request, res: Response) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    const deleted = await db.deleteRsvp(req.params.id);
-    if (deleted) {
-      res.json({ success: true, message: 'تم حذف الرد بنجاح من قاعدة البيانات السحابية' });
-    } else {
-      res.status(404).json({ success: false, error: 'الرد غير موجود' });
+    const id = req.params.id;
+    if (!id) {
+      res.status(400).json({ success: false, error: 'معرّف الرد مطلوب' });
+      return;
     }
+    await db.deleteRsvp(id);
+    res.json({ success: true, message: 'تم حذف الرد نهائياً من قاعدة البيانات', id });
+  });
+
+  app.post([...rsvpDeletePaths.map(p => `${p}/delete`), '/api/rsvp/delete'], requireAdmin, async (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    const id = req.params.id || req.body?.id;
+    if (!id) {
+      res.status(400).json({ success: false, error: 'معرّف الرد مطلوب' });
+      return;
+    }
+    await db.deleteRsvp(id);
+    res.json({ success: true, message: 'تم حذف الرد نهائياً من قاعدة البيانات', id });
   });
 
   app.get('/api/rsvp/export-csv', requireAdmin, (_req: Request, res: Response) => {

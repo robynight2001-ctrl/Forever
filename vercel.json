@@ -24,6 +24,10 @@
       "destination": "/api/rsvp"
     },
     {
+      "source": "/api/rsvp/(.*)",
+      "destination": "/api/rsvp?id=$1"
+    },
+    {
       "source": "/api/guest-messages",
       "destination": "/api/guest-messages"
     },

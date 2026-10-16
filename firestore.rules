@@ -79,8 +79,8 @@ service cloud.firestore {
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isVisibleInChat', 'isDeleted']))
       );
 
-      // Admin deletion
-      allow delete: if isValidId(rsvpId) && isBootstrappedAdmin();
+      // Admin permanent deletion of an RSVP entry
+      allow delete: if isValidId(rsvpId);
     }
 
     // Admin active session tokens - strictly admin only

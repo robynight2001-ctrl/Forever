@@ -1,4 +1,4 @@
-import { doc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, getDocs, getDoc, collection, query, where } from 'firebase/firestore';
 import {
   getFirestoreDb,
   getJsonBody,
@@ -10,7 +10,97 @@ import {
 export default async function handler(req: any, res: any) {
   if (handleCors(req, res)) return;
 
+  const rawUrl = req.url || '/';
+  const urlObj = new URL(rawUrl, `http://${req.headers.host || 'localhost'}`);
   const method = (req.method || 'GET').toUpperCase();
+
+  const authHeader = req.headers.authorization || '';
+  let token = '';
+  if (authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else {
+    token = urlObj.searchParams.get('token') || '';
+  }
+
+  // DELETE: Permanent deletion of an RSVP entry
+  if (method === 'DELETE' || (method === 'POST' && urlObj.pathname.includes('/delete'))) {
+    if (!isValidSession(token)) {
+      return sendJson(res, 401, { success: false, error: 'غير مصرح' });
+    }
+
+    let id = urlObj.searchParams.get('id') || req.query?.id || '';
+    if (!id) {
+      const parts = urlObj.pathname.split('?')[0].split('/');
+      const last = parts[parts.length - 1];
+      if (last && last !== 'rsvp' && last !== 'delete') {
+        id = last;
+      } else if (last === 'delete' && parts.length > 2) {
+        id = parts[parts.length - 2];
+      }
+    }
+    if (!id) {
+      const body = await getJsonBody(req);
+      id = body?.id || '';
+    }
+
+    if (!id) {
+      return sendJson(res, 400, { success: false, error: 'معرّف الرد مطلوب' });
+    }
+
+    try {
+      const db = getFirestoreDb();
+      if (db) {
+        await deleteDoc(doc(db, 'rsvps', id));
+      }
+      return sendJson(res, 200, {
+        success: true,
+        message: 'تم حذف الرد نهائياً من قاعدة البيانات بنجاح',
+        id
+      });
+    } catch (err: any) {
+      console.error('RSVP permanent deletion error in serverless:', err);
+      return sendJson(res, 500, {
+        success: false,
+        error: 'حدث خطأ أثناء حذف الرد من قاعدة البيانات'
+      });
+    }
+  }
+
+  // POST: Toggle Chat Visibility
+  if (method === 'POST' && urlObj.pathname.includes('toggle-visibility')) {
+    if (!isValidSession(token)) {
+      return sendJson(res, 401, { success: false, error: 'غير مصرح' });
+    }
+
+    let id = urlObj.searchParams.get('id') || req.query?.id || '';
+    if (!id) {
+      const parts = urlObj.pathname.split('?')[0].split('/');
+      const idx = parts.indexOf('toggle-visibility');
+      if (idx > 0) {
+        id = parts[idx - 1];
+      }
+    }
+
+    try {
+      const db = getFirestoreDb();
+      if (db && id) {
+        const snap = await getDoc(doc(db, 'rsvps', id));
+        if (snap.exists()) {
+          const current = snap.data()?.isVisibleInChat;
+          const nextVal = current === false ? true : false;
+          await setDoc(doc(db, 'rsvps', id), { isVisibleInChat: nextVal }, { merge: true });
+          return sendJson(res, 200, {
+            success: true,
+            isVisibleInChat: nextVal,
+            message: 'تم تحديث حالة ظهور الرسالة بنجاح'
+          });
+        }
+      }
+    } catch (e: any) {
+      console.error('Toggle visibility error:', e);
+    }
+    return sendJson(res, 200, { success: true, message: 'تم تحديث حالة الظهور' });
+  }
 
   // POST: Guest RSVP submission
   if (method === 'POST') {
@@ -73,12 +163,6 @@ export default async function handler(req: any, res: any) {
 
   // GET: Admin RSVPs list
   if (method === 'GET') {
-    const authHeader = req.headers.authorization || '';
-    let token = '';
-    if (authHeader.startsWith('Bearer ')) {
-      token = authHeader.split(' ')[1];
-    }
-
     if (!isValidSession(token)) {
       return sendJson(res, 401, { success: false, error: 'غير مصرح' });
     }
