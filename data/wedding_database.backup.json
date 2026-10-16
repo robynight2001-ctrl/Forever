@@ -8,8 +8,8 @@
   },
   "published": {
     "siteTitle": "دعوة زفاف رمزي وريم | ليلة العمر",
-    "groomName": "رمزي المنصور",
-    "brideName": "ريم القحطاني",
+    "groomName": "نادر ربيع السيد ",
+    "brideName": "ريم المحمودي ",
     "groomBio": "ابن الأستاذ عبد العزيز المنصور، مهندس معماري",
     "brideBio": "كريمة الدكتور عبد الله القحطاني، مصممة ديكور داخلي",
     "groomImage": "/src/assets/images/wedding_groom_portrait_1791979812553.jpg",
@@ -37,52 +37,52 @@
     "venueImage": "/src/assets/images/wedding_venue_palace_1791979814144.jpg",
     "photos": [
       {
+        "url": "/src/assets/images/wedding_rings_detail_1791979814393.jpg",
+        "order": 1,
         "caption": "رباط المحبة والوفاء",
         "category": "خواتم",
-        "url": "/src/assets/images/wedding_rings_detail_1791979814393.jpg",
-        "id": "photo-1",
-        "order": 1
+        "id": "photo-1"
       },
       {
         "category": "المكان",
         "order": 2,
-        "id": "photo-2",
         "caption": "القاعة الملكية لحفل الزفاف",
-        "url": "/src/assets/images/wedding_venue_palace_1791979814144.jpg"
+        "url": "/src/assets/images/wedding_venue_palace_1791979814144.jpg",
+        "id": "photo-2"
       },
       {
         "category": "الديكور",
-        "order": 3,
         "id": "photo-3",
-        "url": "/src/assets/images/wedding_hero_bg_1791979813300.jpg",
-        "caption": "أجواء الشموع والضيافة الفاخرة"
+        "caption": "أجواء الشموع والضيافة الفاخرة",
+        "order": 3,
+        "url": "/src/assets/images/wedding_hero_bg_1791979813300.jpg"
       },
       {
-        "category": "العريس",
+        "id": "photo-4",
         "caption": "العريس في يومه المميز",
-        "url": "/src/assets/images/wedding_groom_portrait_1791979812553.jpg",
         "order": 4,
-        "id": "photo-4"
+        "category": "العريس",
+        "url": "/src/assets/images/wedding_groom_portrait_1791979812553.jpg"
       },
       {
-        "order": 5,
-        "caption": "إطلالة العروس الملكية",
-        "category": "العروس",
         "id": "photo-5",
+        "category": "العروس",
+        "caption": "إطلالة العروس الملكية",
+        "order": 5,
         "url": "/src/assets/images/wedding_bride_portrait_1791979814208.jpg"
       }
     ],
     "videos": [
       {
-        "id": "video-1",
-        "description": "فيديو تشويقي يعبر عن مشاعر المحبة والبهجة والاستعداد لليلة العمر",
-        "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-        "title": "لحظات استثنائية وبداية الحكاية",
+        "type": "main",
         "order": 1,
-        "type": "main"
+        "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "id": "video-1",
+        "title": "لحظات استثنائية وبداية الحكاية",
+        "description": "فيديو تشويقي يعبر عن مشاعر المحبة والبهجة والاستعداد لليلة العمر"
       }
     ],
-    "musicUrl": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=romantic-wedding-piano-10657.mp3",
+    "musicUrl": "https://mp3tourl.com/audio/1792151072365-69d6228a-53ce-42c7-b66f-c632249399c8.mp3",
     "musicTitle": "معزوفة ليلة العمر الرومانسية",
     "musicEnabled": true,
     "musicVolume": 0.75,
@@ -91,50 +91,43 @@
     "timelineEnabled": true,
     "timeline": [
       {
-        "title": "استقبال الضيوف الكرام",
-        "order": 1,
         "id": "tl-1",
         "time": "08:00 م",
-        "description": "الترحيب بالضيوف وتقديم القهوة العربية الأصيلة والحلويات الفاخرة"
+        "description": "الترحيب بالضيوف وتقديم القهوة العربية الأصيلة والحلويات الفاخرة",
+        "title": "استقبال الضيوف الكرام",
+        "order": 1
       },
       {
-        "id": "tl-2",
-        "description": "دخول العروسين واستقبالهما بأجمل الأهازيج والتهاني",
-        "time": "09:30 م",
         "title": "زفة العروسين المباركة",
-        "order": 2
+        "time": "09:30 م",
+        "id": "tl-2",
+        "order": 2,
+        "description": "دخول العروسين واستقبالهما بأجمل الأهازيج والتهاني"
       },
       {
-        "description": "تناول طعام العشاء مع أطيب التمنيات للعروسين بحياة سعيدة",
-        "order": 3,
-        "title": "مأدبة العشاء الملكية",
         "time": "10:30 م",
-        "id": "tl-3"
-      },
-      {
-        "time": "12:00 ص",
-        "title": "تقطيع قالب الحلوى وتوديع الضيوف",
-        "order": 4,
-        "id": "tl-4",
-        "description": "التقاط الصور التذكارية وتوديع الضيوف بالمسك والعود"
+        "id": "tl-3",
+        "order": 3,
+        "description": "تناول طعام العشاء مع أطيب التمنيات للعروسين بحياة سعيدة",
+        "title": "مأدبة العشاء الملكية"
       }
     ],
     "customSections": [
       {
-        "subtitle": "كلمة من أعماق القلب",
-        "id": "custom-1",
         "isVisible": true,
-        "content": "نعجز عن شكر كل من شاركنا هذه الفرحة أو تكبد عناء الحضور، نسأل الله أن يبارك في أيامكم وأن يديم بيننا أواصر المحبة ودوام المسرات والأفراح.",
+        "id": "custom-1",
+        "title": "عبارات الشكر والامتنان",
         "order": 1,
-        "title": "عبارات الشكر والامتنان"
+        "subtitle": "كلمة من أعماق القلب",
+        "content": "نعجز عن شكر كل من شاركنا هذه الفرحة أو تكبد عناء الحضور، نسأل الله أن يبارك في أيامكم وأن يديم بيننا أواصر المحبة ودوام المسرات والأفراح."
       },
       {
-        "order": 2,
-        "title": "إرشادات خاصة بالضيوف الأعزاء",
         "id": "custom-2",
-        "subtitle": "نرجو التكرم بالاطلاع",
         "isVisible": true,
-        "content": "نرجو من الحضور الكرام الالتزام بخصوصية الحفل وعدم التصوير بالهواتف داخل قاعة النساء، شاكرين لكم تفهمكم وحسن تعاونكم."
+        "order": 2,
+        "content": "نرجو من الحضور الكرام الالتزام بخصوصية الحفل وعدم التصوير بالهواتف داخل قاعة النساء، شاكرين لكم تفهمكم وحسن تعاونكم.",
+        "title": "إرشادات خاصة بالضيوف الأعزاء",
+        "subtitle": "نرجو التكرم بالاطلاع"
       }
     ],
     "rsvpEnabled": true,
@@ -147,7 +140,7 @@
     "cardBgColor": "#231b17",
     "textColor": "#f7f2ea",
     "accentColor": "#d8ad6e",
-    "fontFamily": "amiri",
+    "fontFamily": "alexandria",
     "sectionsOrder": [
       "hero",
       "couple",
@@ -161,12 +154,12 @@
       "rsvp"
     ],
     "hiddenSections": [],
-    "updatedAt": "2026-10-15T04:57:15.207Z"
+    "updatedAt": "2026-10-15T04:57:15.108Z"
   },
   "draft": {
     "siteTitle": "دعوة زفاف رمزي وريم | ليلة العمر",
-    "groomName": "رمزي المنصور",
-    "brideName": "ريم القحطاني",
+    "groomName": "نادر ربيع السيد ",
+    "brideName": "ريم المحمودي ",
     "groomBio": "ابن الأستاذ عبد العزيز المنصور، مهندس معماري",
     "brideBio": "كريمة الدكتور عبد الله القحطاني، مصممة ديكور داخلي",
     "groomImage": "/src/assets/images/wedding_groom_portrait_1791979812553.jpg",
@@ -194,52 +187,52 @@
     "venueImage": "/src/assets/images/wedding_venue_palace_1791979814144.jpg",
     "photos": [
       {
-        "category": "خواتم",
         "id": "photo-1",
+        "order": 1,
         "caption": "رباط المحبة والوفاء",
-        "url": "/src/assets/images/wedding_rings_detail_1791979814393.jpg",
-        "order": 1
+        "category": "خواتم",
+        "url": "/src/assets/images/wedding_rings_detail_1791979814393.jpg"
       },
       {
-        "caption": "القاعة الملكية لحفل الزفاف",
         "category": "المكان",
+        "order": 2,
+        "caption": "القاعة الملكية لحفل الزفاف",
         "url": "/src/assets/images/wedding_venue_palace_1791979814144.jpg",
-        "id": "photo-2",
-        "order": 2
+        "id": "photo-2"
       },
       {
-        "caption": "أجواء الشموع والضيافة الفاخرة",
-        "id": "photo-3",
         "url": "/src/assets/images/wedding_hero_bg_1791979813300.jpg",
+        "caption": "أجواء الشموع والضيافة الفاخرة",
+        "order": 3,
         "category": "الديكور",
-        "order": 3
+        "id": "photo-3"
       },
       {
-        "url": "/src/assets/images/wedding_groom_portrait_1791979812553.jpg",
-        "caption": "العريس في يومه المميز",
         "id": "photo-4",
-        "order": 4,
-        "category": "العريس"
+        "caption": "العريس في يومه المميز",
+        "url": "/src/assets/images/wedding_groom_portrait_1791979812553.jpg",
+        "category": "العريس",
+        "order": 4
       },
       {
+        "category": "العروس",
+        "caption": "إطلالة العروس الملكية",
         "id": "photo-5",
         "url": "/src/assets/images/wedding_bride_portrait_1791979814208.jpg",
-        "caption": "إطلالة العروس الملكية",
-        "category": "العروس",
         "order": 5
       }
     ],
     "videos": [
       {
-        "id": "video-1",
-        "type": "main",
-        "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-        "title": "لحظات استثنائية وبداية الحكاية",
         "order": 1,
-        "description": "فيديو تشويقي يعبر عن مشاعر المحبة والبهجة والاستعداد لليلة العمر"
+        "type": "main",
+        "id": "video-1",
+        "title": "لحظات استثنائية وبداية الحكاية",
+        "description": "فيديو تشويقي يعبر عن مشاعر المحبة والبهجة والاستعداد لليلة العمر",
+        "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
       }
     ],
-    "musicUrl": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=romantic-wedding-piano-10657.mp3",
+    "musicUrl": "https://mp3tourl.com/audio/1792151072365-69d6228a-53ce-42c7-b66f-c632249399c8.mp3",
     "musicTitle": "معزوفة ليلة العمر الرومانسية",
     "musicEnabled": true,
     "musicVolume": 0.75,
@@ -248,50 +241,43 @@
     "timelineEnabled": true,
     "timeline": [
       {
-        "order": 1,
         "description": "الترحيب بالضيوف وتقديم القهوة العربية الأصيلة والحلويات الفاخرة",
-        "title": "استقبال الضيوف الكرام",
+        "order": 1,
+        "id": "tl-1",
         "time": "08:00 م",
-        "id": "tl-1"
+        "title": "استقبال الضيوف الكرام"
       },
       {
-        "time": "09:30 م",
-        "title": "زفة العروسين المباركة",
+        "id": "tl-2",
         "order": 2,
         "description": "دخول العروسين واستقبالهما بأجمل الأهازيج والتهاني",
-        "id": "tl-2"
+        "time": "09:30 م",
+        "title": "زفة العروسين المباركة"
       },
       {
-        "description": "تناول طعام العشاء مع أطيب التمنيات للعروسين بحياة سعيدة",
+        "title": "مأدبة العشاء الملكية",
         "time": "10:30 م",
         "order": 3,
-        "title": "مأدبة العشاء الملكية",
-        "id": "tl-3"
-      },
-      {
-        "description": "التقاط الصور التذكارية وتوديع الضيوف بالمسك والعود",
-        "order": 4,
-        "title": "تقطيع قالب الحلوى وتوديع الضيوف",
-        "id": "tl-4",
-        "time": "12:00 ص"
+        "id": "tl-3",
+        "description": "تناول طعام العشاء مع أطيب التمنيات للعروسين بحياة سعيدة"
       }
     ],
     "customSections": [
       {
-        "subtitle": "كلمة من أعماق القلب",
-        "title": "عبارات الشكر والامتنان",
         "order": 1,
-        "isVisible": true,
+        "title": "عبارات الشكر والامتنان",
         "id": "custom-1",
+        "isVisible": true,
+        "subtitle": "كلمة من أعماق القلب",
         "content": "نعجز عن شكر كل من شاركنا هذه الفرحة أو تكبد عناء الحضور، نسأل الله أن يبارك في أيامكم وأن يديم بيننا أواصر المحبة ودوام المسرات والأفراح."
       },
       {
-        "isVisible": true,
-        "subtitle": "نرجو التكرم بالاطلاع",
         "content": "نرجو من الحضور الكرام الالتزام بخصوصية الحفل وعدم التصوير بالهواتف داخل قاعة النساء، شاكرين لكم تفهمكم وحسن تعاونكم.",
         "order": 2,
         "title": "إرشادات خاصة بالضيوف الأعزاء",
-        "id": "custom-2"
+        "isVisible": true,
+        "id": "custom-2",
+        "subtitle": "نرجو التكرم بالاطلاع"
       }
     ],
     "rsvpEnabled": true,
@@ -304,7 +290,7 @@
     "cardBgColor": "#231b17",
     "textColor": "#f7f2ea",
     "accentColor": "#d8ad6e",
-    "fontFamily": "amiri",
+    "fontFamily": "alexandria",
     "sectionsOrder": [
       "hero",
       "couple",
@@ -452,6 +438,10 @@
     "07823c20fcd548de041b131321e4831afa04a31ae7b70ae7bd0fead566f20b37": {
       "username": "Ramadan",
       "expiresAt": 1792754951096
+    },
+    "cdb381e59c63936e8105104c705c74af6ee9318c4db113e87aa89b9bea453e3c": {
+      "username": "Ramadan",
+      "expiresAt": 1792756537591
     }
   }
 }
