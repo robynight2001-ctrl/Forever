@@ -4,12 +4,36 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/auth/login",
+      "destination": "/api/auth/login"
+    },
+    {
+      "source": "/api/auth/setup-status",
+      "destination": "/api/auth/setup-status"
+    },
+    {
+      "source": "/api/auth/me",
+      "destination": "/api/auth/me"
+    },
+    {
+      "source": "/api/auth/logout",
+      "destination": "/api/auth/logout"
+    },
+    {
+      "source": "/api/rsvp",
+      "destination": "/api/rsvp"
+    },
+    {
+      "source": "/api/guest-messages",
+      "destination": "/api/guest-messages"
+    },
+    {
       "source": "/api/(.*)",
-      "destination": "/api"
+      "destination": "/api?url=/api/$1"
     },
     {
       "source": "/admin/api/(.*)",
-      "destination": "/api"
+      "destination": "/api?url=/api/$1"
     },
     {
       "source": "/(.*)",
